@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 export function useCamera() {
   const streamRef = useRef<MediaStream | null>(null);
@@ -25,5 +25,9 @@ export function useCamera() {
     streamRef.current = null;
   }, []);
 
-  return { start, stop };
+  // Stable object identity so consumers can safely use `camera` as an effect
+  // dependency (start/stop are useCallback-stable). Without this, returning a
+  // fresh object each render would make a `[camera]`-deps effect re-run every
+  // render — firing its cleanup (which stops the camera) on every update.
+  return useMemo(() => ({ start, stop }), [start, stop]);
 }
